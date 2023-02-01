@@ -112,67 +112,90 @@ func insertExcel(f *excelize.File, data []models.Job, start int) error {
 
 	var tmp []string
 	for idx, job := range data {
-		cell, err := excelize.CoordinatesToCellName(1, idx+1+start)
-		if err != nil {
-			return err
-		}
-		//tmp = append(tmp, job.Base.Link)
-		tmp = append(tmp, job.Company.Name)
-		tmp = append(tmp, job.Base.Name)
-		tmp = append(tmp, job.Base.Salary)
-		tmp = append(tmp, job.Base.Tags[0])
-		tmp = append(tmp, job.Base.Tags[1])
-		tmp = append(tmp, job.Base.Area)
-		tmp = append(tmp, strings.Join(job.Requirement.Tags, ","))
-		tmp = append(tmp, job.Company.Desc)
-		//tmp = append(tmp, job.Company.Logo)
-		//tmp = append(tmp, job.Company.Link)
-		tmp = append(tmp, strings.Join(job.Company.Tags, ","))
-
-		// 设置行数据
-		if err := f.SetSheetRow("Sheet1", cell, &tmp); err != nil {
-			return err
-		}
-
-		// 超链接样式
-		style, err := f.NewStyle(&excelize.Style{
-			Font: &excelize.Font{Color: "#1265BE"},
-		})
-		if err != nil {
-			return err
-		}
-
-		// 公司超链接
-		{
-			cell, err = excelize.CoordinatesToCellName(1, idx+1+start)
+		row := idx + 1 + start
+		// 加表头
+		if start == 0 && idx == 0 {
+			cell, err := excelize.CoordinatesToCellName(1, row)
 			if err != nil {
 				return err
 			}
-			if err := f.SetCellHyperLink("Sheet1",
-				cell, job.Company.Link, "External",
-				excelize.HyperlinkOpts{
-					Display: &job.Company.Link,
-					Tooltip: &job.Company.Name,
-				}); err != nil {
+			tmp = append(tmp, "公司")
+			tmp = append(tmp, "岗位")
+			tmp = append(tmp, "薪资")
+			tmp = append(tmp, "经验")
+			tmp = append(tmp, "学历")
+			tmp = append(tmp, "地区")
+			tmp = append(tmp, "要求")
+			tmp = append(tmp, "福利")
+			tmp = append(tmp, "公司概况")
+			if err := f.SetSheetRow("Sheet1", cell, &tmp); err != nil {
 				return err
 			}
-			_ = f.SetCellStyle("Sheet1", cell, cell, style)
+			tmp = nil
+			row++
 		}
-		// 岗位超链接
+
+		// 添加数据
 		{
-			cell, err = excelize.CoordinatesToCellName(2, idx+1+start)
+			cell, err := excelize.CoordinatesToCellName(1, row)
 			if err != nil {
 				return err
 			}
-			if err := f.SetCellHyperLink("Sheet1",
-				cell, job.Base.Link, "External",
-				excelize.HyperlinkOpts{
-					Display: &job.Base.Link,
-					Tooltip: &job.Base.Name,
-				}); err != nil {
+			tmp = append(tmp, job.Company.Name)
+			tmp = append(tmp, job.Base.Name)
+			tmp = append(tmp, job.Base.Salary)
+			tmp = append(tmp, job.Base.Tags[0])
+			tmp = append(tmp, job.Base.Tags[1])
+			tmp = append(tmp, job.Base.Area)
+			tmp = append(tmp, strings.Join(job.Requirement.Tags, ","))
+			tmp = append(tmp, job.Company.Desc)
+			tmp = append(tmp, strings.Join(job.Company.Tags, ","))
+			// 设置行数据
+			if err := f.SetSheetRow("Sheet1", cell, &tmp); err != nil {
 				return err
 			}
-			err = f.SetCellStyle("Sheet1", cell, cell, style)
+
+			// 超链接样式
+			style, err := f.NewStyle(&excelize.Style{
+				Font: &excelize.Font{Color: "#1265BE"},
+			})
+			if err != nil {
+				return err
+			}
+
+			// 公司超链接
+			{
+				cell, err = excelize.CoordinatesToCellName(1, row)
+				if err != nil {
+					return err
+				}
+				if err := f.SetCellHyperLink("Sheet1",
+					cell, job.Company.Link, "External",
+					excelize.HyperlinkOpts{
+						Display: &job.Company.Link,
+						Tooltip: &job.Company.Name,
+					}); err != nil {
+					return err
+				}
+				_ = f.SetCellStyle("Sheet1", cell, cell, style)
+			}
+
+			// 岗位超链接
+			{
+				cell, err = excelize.CoordinatesToCellName(2, row)
+				if err != nil {
+					return err
+				}
+				if err := f.SetCellHyperLink("Sheet1",
+					cell, job.Base.Link, "External",
+					excelize.HyperlinkOpts{
+						Display: &job.Base.Link,
+						Tooltip: &job.Base.Name,
+					}); err != nil {
+					return err
+				}
+				err = f.SetCellStyle("Sheet1", cell, cell, style)
+			}
 		}
 
 		tmp = nil
